@@ -1,3 +1,4 @@
+import PreciseAudio from '@synesthesia-project/precise-audio';
 import * as app from './app';
 
 interface PlayerOptions {
@@ -8,7 +9,7 @@ interface PlayerOptions {
 }
 
 class Player {
-  private audio: HTMLAudioElement;
+  private audio: PreciseAudio;
   private durationThresholdReached: boolean;
   public threshold: number;
 
@@ -21,11 +22,12 @@ class Player {
       ...options
     };
 
-    this.audio = new Audio();
+    this.audio = new PreciseAudio();
 
+    // Disable gapless for any songs longer than 10 minutes
+    // TODO: allow user configuration of this
+    this.audio.thresholds.basicModeThresholdSeconds = 60 * 10;
     this.audio.defaultPlaybackRate = mergedOptions.playbackRate;
-    // eslint-disable-next-line
-    // @ts-ignore
     this.audio.setSinkId(mergedOptions.audioOutputDevice);
     this.audio.playbackRate = mergedOptions.playbackRate;
     this.audio.volume = mergedOptions.volume;
@@ -81,15 +83,14 @@ class Player {
   }
 
   async setOutputDevice(deviceId: string) {
-    // eslint-disable-next-line
-    // @ts-ignore
     await this.audio.setSinkId(deviceId);
   }
 
-  setAudioSrc(src: string) {
+  setTracks(srcs: string[]) {
+    console.log('setTracks', srcs);
     // When we change song, need to update the thresholdReached indicator.
     this.durationThresholdReached = false;
-    this.audio.src = src;
+    this.audio.updateTracks(...srcs);
   }
 
   setAudioCurrentTime(currentTime: number) {
