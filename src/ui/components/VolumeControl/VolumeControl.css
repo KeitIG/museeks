@@ -6,12 +6,31 @@
   background-color: var(--header-bg);
   position: absolute;
   z-index: 10;
-  top: -2px;
-  left: -110px;
-  display: none;
-  padding: 10px 12px;
+  top: -4px;
+  left: 30px;
+  padding: 10px 5px;
+  -webkit-app-region: no-drag;
+}
 
-  &.visible {
+:global(.os-win32),
+:global(.os-linux) .volume-control-position {
+  display: block;
+}
+
+:global(.os-darwin) .volume-control-position {
+  @media (min-width: 1200px) {
     display: block;
+  }
+
+  @media (max-width: 1199px) {
+    display: none;
+
+    &.visible {
+      display: block;
+    }
+
+    &.popup {
+      border: 1px solid lightgray;
+    }
   }
 }

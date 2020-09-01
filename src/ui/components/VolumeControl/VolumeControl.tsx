@@ -15,21 +15,25 @@ const SMOOTHING_FACTOR = 4;
 const smoothifyVolume = (value: number): number => value ** SMOOTHING_FACTOR;
 const unsmoothifyVolume = (value: number): number => value ** (1 / SMOOTHING_FACTOR);
 
+interface Props {
+  queueCursor: number | null;
+}
+
 interface State {
   showVolume: boolean;
   volume: number;
   muted: boolean;
 }
 
-export default class VolumeControl extends React.Component<{}, State> {
-  constructor(props: {}) {
+export default class VolumeControl extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
 
     const audio = Player.getAudio();
 
     this.state = {
       showVolume: false,
-      volume: unsmoothifyVolume(audio.volume),
+      volume: audio.volume,
       muted: audio.muted
     };
 
@@ -49,7 +53,16 @@ export default class VolumeControl extends React.Component<{}, State> {
     const smoothVolume = smoothifyVolume(value);
 
     PlayerActions.setVolume(smoothVolume);
-    this.setState({ volume: smoothVolume });
+
+    // disable mute when it is still set
+    let muted = this.state.muted;
+    if (muted) {
+      PlayerActions.setMuted(false);
+
+      muted = false;
+    }
+
+    this.setState({ volume: smoothVolume, muted });
   }
 
   showVolume() {
@@ -70,8 +83,9 @@ export default class VolumeControl extends React.Component<{}, State> {
   }
 
   render() {
-    const volumeClasses = cx(styles.volumeControl, {
-      [styles.visible]: this.state.showVolume
+    const volumeClasses = cx(styles.volumeControl, styles.volumeControlPosition, {
+      [styles.visible]: this.state.showVolume || this.props.queueCursor === null,
+      [styles.popup]: this.props.queueCursor != null
     });
 
     return (
@@ -85,7 +99,7 @@ export default class VolumeControl extends React.Component<{}, State> {
             max={1}
             step={0.01}
             tooltip={false}
-            value={unsmoothifyVolume(this.state.volume)}
+            value={unsmoothifyVolume(this.state.muted ? 0.0 : this.state.volume)}
             onChange={this.setVolume}
           />
         </div>
